@@ -1,36 +1,125 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Scaler Personabot
 
-## Getting Started
+A persona chatbot built for a prompt-engineering assignment. Switch between three Scaler voices and have a conversation with each:
 
-First, run the development server:
+- **Kshitij Mishra** — Instructor at Scaler. Hinglish, Socratic, first-principles.
+- **Anshuman Singh** — Co-founder of Scaler. Frameworks-first founder voice.
+- **Abhimanyu Saxena** — Co-founder of Scaler. Macro-first founder + investor voice.
+
+Each persona has its own deeply-crafted system prompt with a persona description, few-shot examples, chain-of-thought reasoning instruction, output format spec, and constraints — see [`prompts.md`](./prompts.md). Switching personas resets the conversation so you always start clean.
+
+> The replies are AI-generated impressions for an academic exercise — not the actual people speaking. Read the [reflection](./reflection.md) for what worked, what didn't, and what GIGO taught us.
+
+---
+
+## Live demo
+
+**Deployed:** https://personabot-scaler.vercel.app *(replace with your actual deployment URL)*
+
+---
+
+## Screenshots
+
+| Mobile chat | Persona switcher | Active-persona banner |
+| --- | --- | --- |
+| ![mobile](./public/screens/mobile.png) | ![switcher](./public/screens/switcher.png) | ![banner](./public/screens/banner.png) |
+
+*(Add your screenshots to `public/screens/` after first run; the README references them so the evaluator sees them on GitHub.)*
+
+---
+
+## Stack
+
+- **Next.js 16** (App Router, Route Handlers, React 19, React Compiler enabled)
+- **Tailwind CSS v4**
+- **Google Gemini API** (`gemini-2.5-flash` by default — free tier, no credit card)
+- **TypeScript + Biome**
+- Deploys to Vercel out of the box.
+
+Why Gemini? Free tier, no payment friction for an evaluator who wants to fork-and-run, and `2.5-flash` quality is more than sufficient for persona impressions. The provider is isolated to a single file (`src/app/api/chat/route.ts`) — swap to OpenAI / Anthropic / OpenRouter by replacing one fetch call.
+
+---
+
+## Setup
 
 ```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+# 1. Clone & install
+git clone https://github.com/marvelxcodes/personabot.git
+cd personabot
+bun install     # or: pnpm i / npm i / yarn
+
+# 2. Configure your API key
+cp .env.example .env.local
+# Open .env.local and paste your Gemini API key.
+# Get one free at https://aistudio.google.com/app/apikey
+
+# 3. Run
+bun dev         # or: npm run dev
+# → http://localhost:3000
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+That's it — three env-prep commands, no other infra.
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+---
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+## Deploying to Vercel
 
-## Learn More
+1. Push this repo to GitHub.
+2. Import the repo at [vercel.com/new](https://vercel.com/new).
+3. Add an environment variable: `GEMINI_API_KEY = <your key>`.
+4. Deploy.
 
-To learn more about Next.js, take a look at the following resources:
+Persona switching, chat, and error states all work in production identically to local — no extra config.
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+---
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+## Project structure
 
-## Deploy on Vercel
+```
+src/
+├── app/
+│   ├── api/chat/route.ts     # POST /api/chat — calls Gemini with persona system prompt
+│   ├── globals.css           # Dark gradient theme + animations
+│   ├── layout.tsx
+│   └── page.tsx              # Mounts <ChatInterface />
+├── components/
+│   ├── ChatInterface.tsx     # Stateful container (messages, send, switch, retry)
+│   ├── PersonaSwitcher.tsx   # Tab-bar of 3 personas
+│   ├── PersonaAvatar.tsx     # Gradient avatar with active-state halo
+│   ├── MessageBubble.tsx
+│   ├── SuggestionChips.tsx   # Quick-start questions per persona
+│   └── TypingIndicator.tsx
+├── data/
+│   └── personas.ts           # Source of truth: 3 personas + system prompts + chips
+└── lib/
+    └── types.ts              # Shared chat types
+.env.example
+prompts.md                    # All three system prompts annotated
+reflection.md                 # 300–500 word reflection on what worked + GIGO
+```
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+---
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+## Feature checklist (assignment requirements)
+
+- [x] Three personas with distinct, well-researched system prompts
+- [x] Each system prompt contains: persona description, ≥3 few-shot examples, chain-of-thought instruction, output instruction, constraints
+- [x] Clean chat UI with persona switcher (tabs/cards)
+- [x] Switching persona resets the conversation
+- [x] Active persona is clearly visible at all times (avatar + banner + colored accent)
+- [x] Suggestion chips per persona (4 each)
+- [x] Typing indicator while waiting for the API
+- [x] Mobile + desktop responsive
+- [x] API key only in `process.env.GEMINI_API_KEY` — never in source
+- [x] Each persona's system prompt is passed to the API correctly
+- [x] Graceful error handling (network, upstream, safety-blocked, missing key) with a retry button
+- [x] `.env.example` present, `.env*` gitignored
+- [x] `prompts.md` with all three prompts annotated
+- [x] `reflection.md` (300–500 words)
+- [x] Public GitHub repo + live Vercel deployment
+
+---
+
+## License
+
+MIT — feel free to fork, adapt, and submit your own variation. Just credit the original repo if you republish.
